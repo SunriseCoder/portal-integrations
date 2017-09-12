@@ -12,6 +12,7 @@ target
 
 #Binaries
 files
+data
 
 # Logs
 log
