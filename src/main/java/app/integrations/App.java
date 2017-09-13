@@ -10,9 +10,15 @@ public class App {
     public static void main(String[] args) throws Exception {
         String folder = "data";
         String filename = "sample.wav";
+        //String filename = "norm.wav";
+        //String filename = "complex.wav";
+        String outputname = "out.wav";
 
         FileScanner scanner = new FileScanner();
         scanner.open(folder, filename);
-        scanner.decode();
+        scanner.setOutput(folder, outputname);
+        //scanner.decode();
+        scanner.copy();
+        scanner.close();
     }
 }
