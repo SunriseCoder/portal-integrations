@@ -32,6 +32,7 @@ public class WaveInputStream implements FrameInputStream {
         this.inputStream = audioInputStream;
     }
 
+    @Override
     public int readFrames(int[] frames) throws IOException {
         byte[] buffer = new byte[frameSize * frames.length];
         int read = inputStream.read(buffer);
@@ -64,11 +65,13 @@ public class WaveInputStream implements FrameInputStream {
         return value;
     }
 
+    @Override
     public int available() throws IOException {
         int available = inputStream.available();
         return available;
     }
 
+    @Override
     public void close() throws IOException {
         if (inputStream != null) {
             inputStream.close();

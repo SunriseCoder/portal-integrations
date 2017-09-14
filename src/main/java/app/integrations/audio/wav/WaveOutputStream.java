@@ -22,17 +22,23 @@ public class WaveOutputStream implements FrameOutputStream {
         headerWriter = new WaveHeaderWriter(this.outputFile, format);
     }
 
+    @Override
     public void writeHeader() throws IOException, UnsupportedAudioFileException {
         headerWriter.writerHeader();
     }
 
+    @Override
     public void write(int[] frameBuffer, int offset, int length) throws IOException, UnsupportedAudioFileException {
         if (offset != 0 || length != frameBuffer.length) {
             int[] oldArray = frameBuffer;
             frameBuffer = new int[length];
             System.arraycopy(oldArray, offset, frameBuffer, 0, length);
         }
+        write(frameBuffer);
+    }
 
+    @Override
+    public void write(int[] frameBuffer) throws IOException, UnsupportedAudioFileException {
         byte[] buffer = framesToByteArrays(frameBuffer);
         outputFile.seek(outputFile.length());
         outputFile.write(buffer);
@@ -75,6 +81,7 @@ public class WaveOutputStream implements FrameOutputStream {
         return byteArray;
     }
 
+    @Override
     public void close() throws IOException {
         outputFile.close();
     }
