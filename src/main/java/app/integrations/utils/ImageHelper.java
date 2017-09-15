@@ -9,7 +9,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-public class StatisticHelper {
+public class ImageHelper {
     private static final int IMAGE_HEIGHT = 500;
 
     public static void createImage(List<Integer> meanings, String foldername, String filename) throws IOException {

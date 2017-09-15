@@ -6,7 +6,7 @@ import java.util.List;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import app.integrations.audio.FileScanner;
-import app.integrations.utils.StatisticHelper;
+import app.integrations.utils.ImageHelper;
 
 /**
  * Hello world!
@@ -14,6 +14,7 @@ import app.integrations.utils.StatisticHelper;
  */
 public class App {
     public static void main(String[] args) throws Exception {
+        long t = System.currentTimeMillis();
         String folder = "data";
         //String filename = "sample.wav";
         //String filename = "norm.wav";
@@ -30,46 +31,36 @@ public class App {
 //        dumpImage(folder, "norm_out5.wav", "norm_out5.png");
 //        combineImages(folder, "norm.png", "norm_out5.png", "norm_and_out5.png");
 
-//        dumpImage(folder, "complex.wav", "complex.png");
-        adjust(folder, "complex.wav", "complex_out4k.wav");
-        dumpImage(folder, "complex_out4k.wav", "complex_out4k.png");
-        combineImages(folder, "complex.png", "complex_out4k.png", "complex_and_out4k.png");
+        String name = "20170914";
+        String suffix = "out44k__";
+        //dumpImage(folder, name + ".wav", name + ".png");
+        adjust(folder, name + ".wav", name + "_" + suffix + ".wav");
+        //dumpImage(folder, name + "_" + suffix + ".wav", name + "_" + suffix + ".png");
+        //combineImages(folder, name + ".png", name + "_" + suffix + ".png", name + "_and_" + suffix + ".png");
 
         //calculateMeans(folder, "norm.wav");
 
         System.out.println("Done");
+        System.out.println("Took ms: " + (System.currentTimeMillis() - t));
     }
 
     private static void adjust(String folder, String filename, String outputname) throws IOException, UnsupportedAudioFileException {
         FileScanner scanner = new FileScanner();
         scanner.open(folder, filename);
         scanner.setOutput(folder, outputname);
-        scanner.adjust();
+        scanner.adjust(1000);
         scanner.close();
     }
 
     private static void dumpImage(String folder, String filename, String imageFile) throws Exception {
         FileScanner scanner = new FileScanner();
         scanner.open(folder, filename);
-        List<Integer> meanings = scanner.collectStatistics();
+        List<Integer> meanings = scanner.calculateMeanings(1000);
         scanner.close();
-        StatisticHelper.createImage(meanings, folder, imageFile);
-    }
-
-    private static void calculateMeans(String folder, String filename) throws IOException, UnsupportedAudioFileException {
-        for (int i = (int) Math.pow(2, 18); i > 1; i /= 2) {
-            meansSeek(folder, filename, i);
-        }
-    }
-
-    private static void meansSeek(String folder, String filename, int chunkSize) throws IOException, UnsupportedAudioFileException {
-        FileScanner scanner = new FileScanner();
-        scanner.open(folder, filename);
-        scanner.calculateMeans(chunkSize);
-        scanner.close();
+        ImageHelper.createImage(meanings, folder, imageFile);
     }
 
     private static void combineImages(String folder, String file1, String file2, String outputFile) throws IOException {
-        StatisticHelper.combineImages(folder, file1, file2, outputFile);
+        ImageHelper.combineImages(folder, file1, file2, outputFile);
     }
 }
