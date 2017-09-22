@@ -12,67 +12,126 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import app.integrations.audio.wav.WaveInputStream;
 import app.integrations.audio.wav.WaveOutputStream;
+import app.integrations.utils.AudioFormatHelper;
 import app.integrations.utils.FileHelper;
 
 public class FileScanner {
-    private AudioFormat format;
-    private FrameInputStream inputStream;
+    private File inputFile;
+    private AudioFormat inputFormat;
     private FrameOutputStream outputStream;
 
     public void open(String foldername, String filename) throws IOException, UnsupportedAudioFileException {
         File file = FileHelper.checkAndGetFile(foldername, filename);
+        this.inputFile = file;
+
         AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
-        this.format = audioInputStream.getFormat();
-        this.inputStream = new WaveInputStream(audioInputStream);
+        this.inputFormat = audioInputStream.getFormat();
     }
 
-    public void setOutput(String foldername, String outputname) throws IOException, UnsupportedAudioFileException {
+    public void setOutput(String foldername, String outputname, int channelsCount) throws IOException, UnsupportedAudioFileException {
+        AudioFormat outputFormat = AudioFormatHelper.copyFormat(inputFormat, channelsCount);
+        setOutput(foldername, outputname, outputFormat);
+    }
+
+    public void setOutput(String foldername, String outputname, AudioFormat outputFormat) throws IOException, UnsupportedAudioFileException {
         File file = FileHelper.createFile(foldername, outputname, true);
-        this.outputStream = new WaveOutputStream(file, format);
+        this.outputStream = new WaveOutputStream(file, outputFormat);
         this.outputStream.writeHeader();
     }
 
-    public List<Integer> calculateMeanings(int chunkSizeMs) throws Exception {
-        int frameRate = (int) format.getFrameRate();
+    public List<List<Integer>> calculateMeanings(int chunkSizeMs) throws Exception {
+        int frameRate = (int) inputFormat.getFrameRate();
         int chunkSize = frameRate * chunkSizeMs / 1000;
         int[] frameBuffer = new int[chunkSize];
-        List<Integer> fileMeanings = new ArrayList<>();
-        while(inputStream.available() > 0) {
-            int read = inputStream.readFrames(frameBuffer);
-            Statistics frameStatistics = new Statistics();
-            frameStatistics.add(frameBuffer, read);
-            fileMeanings.add(frameStatistics.getMathMeaning());
+
+        int channelCount = inputFormat.getChannels();
+        List<List<Integer>> fileMeanings = new ArrayList<>();
+
+        for (int channel = 0; channel < channelCount; channel++) {
+            fileMeanings.add(new ArrayList<>());
         }
+
+        FrameInputStream inputStream = WaveInputStream.create(inputFile);
+
+        boolean readSomething;
+        do {
+            readSomething = false;
+            for (int channel = 0; channel < channelCount; channel++) {
+                int read = inputStream.readFrames(channel, frameBuffer);
+                if (read > 0) {
+                    readSomething = true;
+                    Statistics frameStatistics = new Statistics();
+                    frameStatistics.addData(frameBuffer, read);
+
+                    List<Integer> channelMeanings = fileMeanings.get(channel);
+                    channelMeanings.add(frameStatistics.getMathMeaning());
+                }
+            }
+        } while (readSomething);
+        close(inputStream);
         return fileMeanings;
     }
 
-    public void copy() throws IOException, UnsupportedAudioFileException {
-        int[] frameBuffer = new int[1024];
-        while(inputStream.available() > 0) {
-            int read = inputStream.readFrames(frameBuffer);
-            outputStream.write(frameBuffer, 0, read);
-        }
-    }
-
-    public void adjust(int chunkSizeMs) throws IOException, UnsupportedAudioFileException {
-        int frameRate = (int) format.getFrameRate();
+    public void process(ChannelOperation[] operations, int chunkSizeMs) throws IOException, UnsupportedAudioFileException {
+        int frameRate = (int) inputFormat.getFrameRate();
         int chunkSize = frameRate * chunkSizeMs / 1000;
 
-        FrameStreamAdjuster adjuster = new FrameStreamAdjuster();
-        adjuster.setChunkSize(chunkSize);
-        adjuster.setInputStream(inputStream);
-        adjuster.setOutputStream(outputStream);
+        List<FrameStreamProcessor> processors = new ArrayList<>();
+        for (int i = 0; i < operations.length; i++) {
+            ChannelOperation operation = operations[i];
+            FrameStreamProcessor processor;
+            if (operation.isAdjust()) { // Need to adjust channel
+                int inputChannel = operation.getInputChannel();
+                FrameInputStream inputStream = WaveInputStream.create(inputFile, inputChannel);
+                int outputChannel = operation.getOutputChannel();
+                processor = new FrameStreamAdjuster(inputStream, outputStream, outputChannel);
+            } else {
+                int inputChannel = operation.getInputChannel();
+                FrameInputStream inputStream = WaveInputStream.create(inputFile, inputChannel);
+                int outputChannel = operation.getOutputChannel();
+                processor = new FrameStreamCopier(inputStream, outputStream, outputChannel);
+            }
+            processor.setChunkSize(chunkSize);
+            processor.prepareOperation();
+            processors.add(processor);
+        }
 
-        adjuster.adjust();
+        boolean processedSomething;
+        int dotCounter = 0;
+        do {
+            processedSomething = false;
+            for (FrameStreamProcessor processor : processors) {
+                processedSomething |= processor.processPortion();
+            }
+
+            System.out.print(".");
+            if (dotCounter++ > 100) {
+                System.out.println();
+                dotCounter = 0;
+            }
+        } while (processedSomething);
+        close(processors);
     }
 
     public void close() throws IOException {
-        if (inputStream != null) {
-            inputStream.close();
-        }
-
         if (outputStream != null) {
             outputStream.close();
+        }
+    }
+
+    private void close(List<FrameStreamProcessor> processors) {
+        for (FrameStreamProcessor processor : processors) {
+            processor.close();
+        }
+    }
+
+    private void close(FrameInputStream inputStream) {
+        if (inputStream != null) {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                // Just swallowing
+            }
         }
     }
 }

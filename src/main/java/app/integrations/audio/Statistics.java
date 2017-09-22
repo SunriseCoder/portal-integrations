@@ -13,10 +13,10 @@ public class Statistics {
     }
 
     public void add(int[] frameBuffer) {
-        add(frameBuffer, frameBuffer.length);
+        addData(frameBuffer, frameBuffer.length);
     }
 
-    public void add(int[] frameBuffer, int read) {
+    public void addData(int[] frameBuffer, int read) {
         for (int i = 0; i < read; i++) {
             int value = frameBuffer[i];
             if (value < 0) {

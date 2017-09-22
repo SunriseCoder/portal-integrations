@@ -2,26 +2,31 @@ package app.integrations.utils;
 
 public class Primitives {
 
-    public static byte[] intToBigEndianByteArray2(int value) {
-        byte[] array = new byte[2];
-        array[0] = (byte) ((value >> 8) & 0xFF);
-        array[1] = (byte) (value & 0xFF);
+    public static int littleEndianByteArrayToInt(byte[] buffer, int position, int size) {
+        int value = 0;
+        for (int i = 0; i < size; i++) {
+            int byteValue = buffer[position + i];
+            if (i != size - 1) {
+                byteValue &= 0xFF;
+            }
+            value += byteValue << i * 8;
+        }
+        return value;
+    }
+
+    public static byte[] intToBigEndianByteArray(int value, int sizeInBytes) {
+        byte[] array = new byte[sizeInBytes];
+        for (int i = 0; i < sizeInBytes; i++) {
+            array[i] = (byte) ((value >> ((sizeInBytes - i) * 8)) & 0xFF);
+        }
         return array;
     }
 
-    public static byte[] intToLittleEndianByteArray2(int value) {
-        byte[] array = new byte[2];
-        array[0] = (byte) (value & 0xFF);
-        array[1] = (byte) ((value >> 8) & 0xFF);
-        return array;
-    }
-
-    public static byte[] intToLittleEndianByteArray4(int value) {
-        byte[] array = new byte[4];
-        array[0] = (byte) (value & 0xFF);
-        array[1] = (byte) ((value >> 8) & 0xFF);
-        array[2] = (byte) ((value >> 16) & 0xFF);
-        array[3] = (byte) ((value >> 24) & 0xFF);
+    public static byte[] intToLittleEndianByteArray(int value, int sizeInBytes) {
+        byte[] array = new byte[sizeInBytes];
+        for (int i = 0; i < sizeInBytes; i++) {
+            array[i] = (byte) ((value >> (i * 8)) & 0xFF);
+        }
         return array;
     }
 }
