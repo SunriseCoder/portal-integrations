@@ -51,10 +51,11 @@ public class App {
         //ChannelOperation[] operations = {new ChannelOperation(0, 0, false), new ChannelOperation(0, 1, false)};
 
         // Adjust mono. Keep first track as-is and adjust it as second one
-        ChannelOperation[] operations = {new ChannelOperation(0, 0, false), new ChannelOperation(0, 1, true)};
-        process(folder, name + ".wav", name + "_" + suffix + ".wav", operations);
 
-        //dumpImage(folder, name + ".wav", name + ".png");
+        //ChannelOperation[] operations = {new ChannelOperation(0, 0, false), new ChannelOperation(0, 1, true)};
+        //process(folder, name + ".wav", name + "_" + suffix + ".wav", operations);
+
+        dumpImage(folder, name + ".wav", name + ".png");
         //dumpImage(folder, name + "_" + suffix + ".wav", name + "_" + suffix + ".png");
         //combineImages(folder, name + ".png", name + "_" + suffix + ".png", name + "_and_" + suffix + ".png");
 
@@ -77,9 +78,9 @@ public class App {
     private static void dumpImage(String folder, String inputName, String imageFile) throws Exception {
         FileScanner scanner = new FileScanner();
         scanner.open(folder, inputName);
-        List<List<Integer>> meanings = scanner.calculateMeanings(1000);
+        List<List<Integer>> statistics = scanner.calculateStatistics(1000);
         scanner.close();
-        ImageHelper.createImage(meanings, folder, imageFile);
+        ImageHelper.createImage(statistics, folder, imageFile);
     }
 
     private static void combineImages(String folder, String file1, String file2, String outputFile) throws IOException {

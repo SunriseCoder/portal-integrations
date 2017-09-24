@@ -1,15 +1,14 @@
 package app.integrations.audio;
 
-import java.math.BigInteger;
-
-public class Statistics {
+public class StatsCalculator {
     private long[] statistics;
     private long counter;
-    BigInteger sum;
+    private int lastValue;
+    private long sumOfValues;
+    private long sumOfDeltas;
 
-    public Statistics() {
+    public StatsCalculator() {
         statistics = new long[32768];
-        sum = new BigInteger("0");
     }
 
     public void add(int[] frameBuffer) {
@@ -24,13 +23,21 @@ public class Statistics {
             }
             statistics[value]++;
             counter++;
-            sum = sum.add(new BigInteger(String.valueOf(value)));
+            sumOfValues += value;
+            int delta = Math.abs(value - lastValue);
+            sumOfDeltas += delta;
+            lastValue = value;
         }
     }
 
     public int getMathMeaning() {
-        int mathMeaning = sum.divide(new BigInteger(String.valueOf(counter))).intValue();
+        int mathMeaning = (int) (sumOfValues / counter);
         return mathMeaning;
+    }
+
+    public int getAverageDelta() {
+        int averageDelta = (int) (sumOfDeltas / counter);
+        return averageDelta;
     }
 
     public void dump() {

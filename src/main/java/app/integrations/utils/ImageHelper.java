@@ -10,13 +10,15 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 public class ImageHelper {
+    private static final int SPEECH_MAX_DELTA = 400;
     private static final int CHANNEL_IMAGE_HEIGHT = 400;
 
-    public static void createImage(List<List<Integer>> allMeanings, String foldername, String filename) throws IOException {
+    public static void createImage(List<List<Integer>> allStatistics, String foldername, String filename) throws IOException {
         File file = FileHelper.createFile(foldername, filename, true);
         BufferedImage resultImage = null;
-        for (List<Integer> meanings : allMeanings) {
-            BufferedImage image = createImage(meanings);
+        for (int i = 0; i < allStatistics.size(); i++) {
+            List<Integer> statistic = allStatistics.get(i);
+            BufferedImage image = createImage(statistic, i % 2 == 1);
             if (resultImage == null) {
                 resultImage = image;
             } else {
@@ -48,19 +50,24 @@ public class ImageHelper {
         return resultImage;
     }
 
-    private static BufferedImage createImage(List<Integer> meanings) {
-        int width = meanings.size();
+    private static BufferedImage createImage(List<Integer> statistics, boolean colors) {
+        int width = statistics.size();
         BufferedImage image = new BufferedImage(width, CHANNEL_IMAGE_HEIGHT, BufferedImage.TYPE_INT_RGB);
         Graphics graphics = image.getGraphics();
         graphics.setColor(Color.WHITE);
         graphics.fillRect(0, 0, width, CHANNEL_IMAGE_HEIGHT);
 
         graphics.setColor(Color.BLUE);
-        for (int i = 0; i < meanings.size(); i++) {
-            int mean = meanings.get(i);
-            mean = CHANNEL_IMAGE_HEIGHT / 2 * mean / 32767;
-            int offsetY = CHANNEL_IMAGE_HEIGHT / 2 - mean;
-            graphics.drawLine(i, offsetY, i, offsetY + 2 * mean);
+        for (int i = 0; i < statistics.size(); i++) {
+            int value = statistics.get(i);
+            if (colors && value < SPEECH_MAX_DELTA) {
+                graphics.setColor(Color.GREEN);
+            } else {
+                graphics.setColor(Color.BLUE);
+            }
+            value = CHANNEL_IMAGE_HEIGHT / 2 * value / 32767;
+            int offsetY = CHANNEL_IMAGE_HEIGHT / 2 - value;
+            graphics.drawLine(i, offsetY, i, offsetY + 2 * value);
         }
 
         return image;

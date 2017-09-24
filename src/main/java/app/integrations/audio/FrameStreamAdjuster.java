@@ -69,7 +69,7 @@ public class FrameStreamAdjuster implements FrameStreamProcessor {
         }
 
         // Calculating smooth meaning and factor
-        Statistics statistics = new Statistics();
+        StatsCalculator statistics = new StatsCalculator();
         for (int i = processingPosition - NEIGHBOUR_CHUNK_NUMBER; i <= processingPosition + NEIGHBOUR_CHUNK_NUMBER; i++) {
             int[] buffer = (int[]) chunkMap.get(i);
             if (buffer != null) {

@@ -44,37 +44,46 @@ public class FileScanner {
         this.outputStream.writeHeader();
     }
 
-    public List<List<Integer>> calculateMeanings(int chunkSizeMs) throws Exception {
+    public List<List<Integer>> calculateStatistics(int chunkSizeMs) throws Exception {
         int frameRate = (int) inputFormat.getFrameRate();
         int chunkSize = frameRate * chunkSizeMs / 1000;
         int[] frameBuffer = new int[chunkSize];
 
         int channelCount = inputFormat.getChannels();
-        List<List<Integer>> fileMeanings = new ArrayList<>();
+        List<List<Integer>> fileStatistics = new ArrayList<>();
 
         for (int channel = 0; channel < channelCount; channel++) {
-            fileMeanings.add(new ArrayList<>());
+            fileStatistics.add(new ArrayList<>());
+            fileStatistics.add(new ArrayList<>());
         }
 
         FrameInputStream inputStream = WaveInputStream.create(inputFile);
+        long framesCount = inputStream.getFramesCount();
 
-        boolean readSomething;
+        ProgressPrinter progressPrinter = new ProgressPrinter();
+        progressPrinter.setTotal(framesCount);
+
+        long processedFramesTotal = 0;
         do {
-            readSomething = false;
             for (int channel = 0; channel < channelCount; channel++) {
                 int read = inputStream.readFrames(channel, frameBuffer);
                 if (read > 0) {
-                    readSomething = true;
-                    Statistics frameStatistics = new Statistics();
+                    StatsCalculator frameStatistics = new StatsCalculator();
                     frameStatistics.addData(frameBuffer, read);
 
-                    List<Integer> channelMeanings = fileMeanings.get(channel);
+                    List<Integer> channelMeanings = fileStatistics.get(channel);
                     channelMeanings.add(frameStatistics.getMathMeaning());
+
+                    List<Integer> channelDeltas = fileStatistics.get(channel + 1);
+                    channelDeltas.add(frameStatistics.getAverageDelta());
                 }
+
+                processedFramesTotal += read;
+                progressPrinter.updateProgress(processedFramesTotal);
             }
-        } while (readSomething);
+        } while (processedFramesTotal < framesCount);
         close(inputStream);
-        return fileMeanings;
+        return fileStatistics;
     }
 
     public void process(ChannelOperation[] operations, int chunkSizeMs) throws IOException, UnsupportedAudioFileException {
