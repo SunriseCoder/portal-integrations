@@ -10,13 +10,18 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import app.integrations.audio.api.FrameInputStream;
+import app.integrations.audio.api.FrameOutputStream;
+import app.integrations.audio.api.FrameStreamProcessor;
 import app.integrations.audio.wav.WaveInputStream;
 import app.integrations.audio.wav.WaveOutputStream;
 import app.integrations.utils.AudioFormatHelper;
 import app.integrations.utils.FileHelper;
+import app.integrations.utils.ProgressPrinter;
 
 public class FileScanner {
     private File inputFile;
+    private File outputFile;
     private AudioFormat inputFormat;
     private FrameOutputStream outputStream;
 
@@ -34,8 +39,8 @@ public class FileScanner {
     }
 
     public void setOutput(String foldername, String outputname, AudioFormat outputFormat) throws IOException, UnsupportedAudioFileException {
-        File file = FileHelper.createFile(foldername, outputname, true);
-        this.outputStream = new WaveOutputStream(file, outputFormat);
+        this.outputFile = FileHelper.createFile(foldername, outputname, true);
+        this.outputStream = new WaveOutputStream(outputFile, outputFormat);
         this.outputStream.writeHeader();
     }
 
@@ -76,19 +81,23 @@ public class FileScanner {
         int frameRate = (int) inputFormat.getFrameRate();
         int chunkSize = frameRate * chunkSizeMs / 1000;
 
+        fileInfoPrint();
+
         List<FrameStreamProcessor> processors = new ArrayList<>();
+        long framesCount = 0;
         for (int i = 0; i < operations.length; i++) {
             ChannelOperation operation = operations[i];
+
+            int inputChannel = operation.getInputChannel();
+            int outputChannel = operation.getOutputChannel();
+
+            FrameInputStream inputStream = WaveInputStream.create(inputFile, inputChannel);
+            framesCount = inputStream.getFramesCount();
+
             FrameStreamProcessor processor;
             if (operation.isAdjust()) { // Need to adjust channel
-                int inputChannel = operation.getInputChannel();
-                FrameInputStream inputStream = WaveInputStream.create(inputFile, inputChannel);
-                int outputChannel = operation.getOutputChannel();
                 processor = new FrameStreamAdjuster(inputStream, outputStream, outputChannel);
             } else {
-                int inputChannel = operation.getInputChannel();
-                FrameInputStream inputStream = WaveInputStream.create(inputFile, inputChannel);
-                int outputChannel = operation.getOutputChannel();
                 processor = new FrameStreamCopier(inputStream, outputStream, outputChannel);
             }
             processor.setChunkSize(chunkSize);
@@ -96,21 +105,24 @@ public class FileScanner {
             processors.add(processor);
         }
 
-        boolean processedSomething;
-        int dotCounter = 0;
+        ProgressPrinter progressPrinter = new ProgressPrinter();
+        progressPrinter.setTotal(framesCount);
+        long processedFramesTotal = 0;
+        long processedFrames = 0;
         do {
-            processedSomething = false;
             for (FrameStreamProcessor processor : processors) {
-                processedSomething |= processor.processPortion();
+                processedFrames = processor.processPortion();
             }
 
-            System.out.print(".");
-            if (dotCounter++ > 100) {
-                System.out.println();
-                dotCounter = 0;
-            }
-        } while (processedSomething);
+            processedFramesTotal += processedFrames;
+            progressPrinter.updateProgress(processedFramesTotal);
+        } while (processedFramesTotal < framesCount);
         close(processors);
+    }
+
+    private void fileInfoPrint() {
+        System.out.println("Input file: " + inputFile.getAbsolutePath());
+        System.out.println("Output file: " + outputFile.getAbsolutePath());
     }
 
     public void close() throws IOException {

@@ -1,4 +1,4 @@
-package app.integrations.audio;
+package app.integrations.audio.api;
 
 import java.io.IOException;
 

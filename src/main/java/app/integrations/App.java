@@ -32,13 +32,13 @@ public class App {
 //        dumpImage(folder, "norm_out5.wav", "norm_out5.png");
 //        combineImages(folder, "norm.png", "norm_out5.png", "norm_and_out5.png");
 
-        String name = "complex";
+        String name = "20170920";
 
         //String suffix = "copy";
         //copy(folder, name + ".wav", name + "_" + suffix + ".wav");
 
         String suffix = "adj";
-        ChannelOperation[] operations = {new ChannelOperation(0, 0, false)}; // Copy first track to Mono
+        //ChannelOperation[] operations = {new ChannelOperation(0, 0, false)}; // Copy first track to Mono
         // Copy Stereo
         //ChannelOperation[] operations = {new ChannelOperation(0, 0, false), new ChannelOperation(1, 1, false)};
 
@@ -48,7 +48,7 @@ public class App {
         //ChannelOperation[] operations = {new ChannelOperation(0, 0, false), new ChannelOperation(0, 1, false)};
 
         // Adjust mono. Keep first track as-is and adjust it as second one
-        //ChannelOperation[] operations = {new ChannelOperation(0, 0, false), new ChannelOperation(0, 1, true)};
+        ChannelOperation[] operations = {new ChannelOperation(0, 0, false), new ChannelOperation(0, 1, true)};
         process(folder, name + ".wav", name + "_" + suffix + ".wav", operations);
 
         //dumpImage(folder, name + ".wav", name + ".png");
@@ -58,8 +58,9 @@ public class App {
 
         //calculateMeans(folder, "norm.wav");
 
+        System.out.println();
         System.out.println("Done");
-        System.out.println("Took ms: " + (System.currentTimeMillis() - t));
+        System.out.println("Took " + (System.currentTimeMillis() - t) + " ms");
     }
 
     private static void process(String folder, String inputName, String outputName, ChannelOperation[] operations) throws IOException, UnsupportedAudioFileException {

@@ -4,6 +4,10 @@ import java.io.IOException;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import app.integrations.audio.api.FrameInputStream;
+import app.integrations.audio.api.FrameOutputStream;
+import app.integrations.audio.api.FrameStreamProcessor;
+
 public class FrameStreamCopier implements FrameStreamProcessor {
     private FrameInputStream inputStream;
     private FrameOutputStream outputStream;
@@ -29,14 +33,12 @@ public class FrameStreamCopier implements FrameStreamProcessor {
     }
 
     @Override
-    public boolean processPortion() throws IOException, UnsupportedAudioFileException {
+    public long processPortion() throws IOException, UnsupportedAudioFileException {
         int read = inputStream.readFrames(frameBuffer);
-        boolean copiedSomething = false;
         if (read > 0) {
             outputStream.write(outputChannel, frameBuffer, 0, read);
-            copiedSomething = true;
         }
-        return copiedSomething;
+        return read;
     }
 
     @Override

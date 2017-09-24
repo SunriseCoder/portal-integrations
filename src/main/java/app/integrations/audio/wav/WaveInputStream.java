@@ -8,7 +8,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import app.integrations.audio.FrameInputStream;
+import app.integrations.audio.api.FrameInputStream;
 import app.integrations.utils.FrameBuffer;
 import app.integrations.utils.Primitives;
 
@@ -17,6 +17,7 @@ public class WaveInputStream implements FrameInputStream {
 
     private AudioFormat format;
     private AudioInputStream inputStream;
+    private long framesCount;
     private int channel;
 
     private int frameSize;
@@ -26,6 +27,7 @@ public class WaveInputStream implements FrameInputStream {
 
     // Service variables
     private byte[] parseDataBuffer = new byte[PARSE_DATA_CHUNK_SIZE];
+
 
     private WaveInputStream(AudioInputStream audioInputStream) throws UnsupportedAudioFileException {
         this(audioInputStream, -1);
@@ -49,6 +51,7 @@ public class WaveInputStream implements FrameInputStream {
         }
 
         this.inputStream = audioInputStream;
+        this.framesCount = audioInputStream.getFrameLength();
         int channelCount = format.getChannels();
         this.frameBuffers = new FrameBuffer[channelCount];
         for (int i = 0; i < channelCount; i++) {
@@ -123,6 +126,11 @@ public class WaveInputStream implements FrameInputStream {
             FrameBuffer frameBuffer = frameBuffers[ch];
             frameBuffer.push(value);
         }
+    }
+
+    @Override
+    public long getFramesCount() {
+        return framesCount;
     }
 
     @Override

@@ -6,6 +6,10 @@ import java.util.Map;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import app.integrations.audio.api.FrameInputStream;
+import app.integrations.audio.api.FrameOutputStream;
+import app.integrations.audio.api.FrameStreamProcessor;
+
 public class FrameStreamAdjuster implements FrameStreamProcessor {
     private static final int NORMAL_MEANING = 4000;
     private static final int MAX_FACTOR = 10;
@@ -48,7 +52,7 @@ public class FrameStreamAdjuster implements FrameStreamProcessor {
     }
 
     @Override
-    public boolean processPortion() throws IOException, UnsupportedAudioFileException {
+    public long processPortion() throws IOException, UnsupportedAudioFileException {
         // If there is something to read, reading and putting to map
         boolean available = inputStream.available();
         if (available) {
@@ -61,7 +65,7 @@ public class FrameStreamAdjuster implements FrameStreamProcessor {
         // If there are not enough data for smooth analysis, skipping
         //available = inputStream.available(channel);
         if (!available && decodingPosition <= processingPosition + NEIGHBOUR_CHUNK_NUMBER) {
-            return false;
+            return 0;
         }
 
         // Calculating smooth meaning and factor
@@ -95,7 +99,7 @@ public class FrameStreamAdjuster implements FrameStreamProcessor {
         // Removing old chunk, which is not needed anymore
         chunkMap.remove(processingPosition - NEIGHBOUR_CHUNK_NUMBER);
         processingPosition++;
-        return true;
+        return buffer.length;
     }
 
     private int[] adjustFrameBuffer(int[] sourceBuffer, double factor) {

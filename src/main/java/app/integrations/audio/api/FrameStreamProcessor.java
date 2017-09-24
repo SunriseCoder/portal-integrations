@@ -1,4 +1,4 @@
-package app.integrations.audio;
+package app.integrations.audio.api;
 
 import java.io.IOException;
 
@@ -11,6 +11,6 @@ public interface FrameStreamProcessor {
     /**
      * @return <b>true</b> if processed some data, otherwise <b>false</b>.
      */
-    boolean processPortion() throws IOException, UnsupportedAudioFileException;
+    long processPortion() throws IOException, UnsupportedAudioFileException;
     void close();
 }

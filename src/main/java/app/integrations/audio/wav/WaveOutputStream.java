@@ -7,7 +7,7 @@ import java.io.RandomAccessFile;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import app.integrations.audio.FrameOutputStream;
+import app.integrations.audio.api.FrameOutputStream;
 import app.integrations.utils.ByteBuffer;
 import app.integrations.utils.FrameBuffer;
 import app.integrations.utils.Primitives;
