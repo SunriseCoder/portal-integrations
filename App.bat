@@ -1,1 +1,1 @@
-java -cp target/classes app.integrations.App
+java -cp target/classes app.integrations.App %1

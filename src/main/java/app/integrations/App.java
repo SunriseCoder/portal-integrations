@@ -9,12 +9,15 @@ import app.integrations.audio.ChannelOperation;
 import app.integrations.audio.FileScanner;
 import app.integrations.utils.ImageHelper;
 
-/**
- * Hello world!
- *
- */
 public class App {
+
     public static void main(String[] args) throws Exception {
+        if (args.length < 1) {
+            System.out.println("Usage: App <file name without extension>");
+            return;
+        }
+
+        String name = args[0];
         long t = System.currentTimeMillis();
         String folder = "data";
         //String filename = "sample.wav";
@@ -32,12 +35,12 @@ public class App {
 //        dumpImage(folder, "norm_out5.wav", "norm_out5.png");
 //        combineImages(folder, "norm.png", "norm_out5.png", "norm_and_out5.png");
 
-        String name = "20170920";
+        //String name = "20170920";
 
         //String suffix = "copy";
         //copy(folder, name + ".wav", name + "_" + suffix + ".wav");
 
-        String suffix = "adj";
+        String suffix = "out";
         //ChannelOperation[] operations = {new ChannelOperation(0, 0, false)}; // Copy first track to Mono
         // Copy Stereo
         //ChannelOperation[] operations = {new ChannelOperation(0, 0, false), new ChannelOperation(1, 1, false)};
