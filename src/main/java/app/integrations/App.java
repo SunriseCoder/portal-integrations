@@ -19,7 +19,8 @@ public class App {
 
         String name = args[0];
         long t = System.currentTimeMillis();
-        String folder = "data";
+        String folder = ".";
+        //String folder = "data";
         //String filename = "sample.wav";
         //String filename = "norm.wav";
         //String filename = "complex.wav";
@@ -42,6 +43,7 @@ public class App {
 
         String suffix = "out";
         //ChannelOperation[] operations = {new ChannelOperation(0, 0, false)}; // Copy first track to Mono
+        ChannelOperation[] operations = {new ChannelOperation(0, 0, true)}; // Adjust first track to Mono
         // Copy Stereo
         //ChannelOperation[] operations = {new ChannelOperation(0, 0, false), new ChannelOperation(1, 1, false)};
 
@@ -53,9 +55,9 @@ public class App {
         // Adjust mono. Keep first track as-is and adjust it as second one
 
         //ChannelOperation[] operations = {new ChannelOperation(0, 0, false), new ChannelOperation(0, 1, true)};
-        //process(folder, name + ".wav", name + "_" + suffix + ".wav", operations);
+        process(folder, name + ".wav", name + "_" + suffix + ".wav", operations);
 
-        dumpImage(folder, name + ".wav", name + ".png");
+        //dumpImage(folder, name + ".wav", name + ".png");
         //dumpImage(folder, name + "_" + suffix + ".wav", name + "_" + suffix + ".png");
         //combineImages(folder, name + ".png", name + "_" + suffix + ".png", name + "_and_" + suffix + ".png");
 
@@ -86,12 +88,4 @@ public class App {
     private static void combineImages(String folder, String file1, String file2, String outputFile) throws IOException {
         ImageHelper.combineImageFiles(folder, file1, file2, outputFile);
     }
-/*
-    private static void copy(String folder, String fileName, String outputName) throws IOException, UnsupportedAudioFileException {
-        FileScanner scanner = new FileScanner();
-        scanner.open(folder, fileName);
-        scanner.setOutput(folder, outputName);
-        scanner.copy();
-        scanner.close();
-    }*/
 }

@@ -11,7 +11,7 @@ import app.integrations.audio.api.FrameOutputStream;
 import app.integrations.audio.api.FrameStreamProcessor;
 
 public class FrameStreamAdjuster implements FrameStreamProcessor {
-    private static final int NORMAL_MEANING = 4000;
+    private static final int SPEECH_NORMAL_MEANING = 4000;
     private static final int MAX_FACTOR = 10;
     private static final int MIN_VALUE = -32768;
     private static final int MAX_VALUE = 32767;
@@ -81,7 +81,7 @@ public class FrameStreamAdjuster implements FrameStreamProcessor {
         int[] buffer = (int[]) chunkMap.get(processingPosition);
         if (smoothMean != 0) {
             // Adjusting current chunk
-            double factor = (double) NORMAL_MEANING / smoothMean;
+            double factor = (double) SPEECH_NORMAL_MEANING / smoothMean;
             //System.out.println("Position: " + position + ", factor: " + factor);
             if (factor > maxFactor) {
                 maxFactor = (int) factor;
@@ -92,7 +92,11 @@ public class FrameStreamAdjuster implements FrameStreamProcessor {
             if (factor > MAX_FACTOR) {
                 factor = MAX_FACTOR;
             }
-            buffer = adjustFrameBuffer(buffer, factor);
+
+            // Amplifying only. If the volume level is already above normal, doing nothing
+            if (factor > 1) {
+                buffer = adjustFrameBuffer(buffer, factor);
+            }
         }
         outputStream.write(outputChannel, buffer);
 
