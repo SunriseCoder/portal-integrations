@@ -25,12 +25,32 @@ public class FileScanner {
     private AudioFormat inputFormat;
     private FrameOutputStream outputStream;
 
+    public void open(String inputFileName) throws IOException, UnsupportedAudioFileException {
+        File file = FileHelper.checkAndGetFile(inputFileName);
+        setInputFile(file);
+    }
+
     public void open(String foldername, String filename) throws IOException, UnsupportedAudioFileException {
         File file = FileHelper.checkAndGetFile(foldername, filename);
+        setInputFile(file);
+    }
+
+    private void setInputFile(File file) throws UnsupportedAudioFileException, IOException {
         this.inputFile = file;
 
         AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
         this.inputFormat = audioInputStream.getFormat();
+    }
+
+    public void setOutput(String outputFileName, int channelsCount) throws IOException, UnsupportedAudioFileException {
+        AudioFormat outputFormat = AudioFormatHelper.copyFormat(inputFormat, channelsCount);
+        setOutput(outputFileName, outputFormat);
+    }
+
+    public void setOutput(String outputFileName, AudioFormat outputFormat) throws IOException, UnsupportedAudioFileException {
+        this.outputFile = FileHelper.createFile(outputFileName, true);
+        this.outputStream = new WaveOutputStream(outputFile, outputFormat);
+        this.outputStream.writeHeader();
     }
 
     public void setOutput(String foldername, String outputname, int channelsCount) throws IOException, UnsupportedAudioFileException {
@@ -86,16 +106,15 @@ public class FileScanner {
         return fileStatistics;
     }
 
-    public void process(ChannelOperation[] operations, int chunkSizeMs) throws IOException, UnsupportedAudioFileException {
+    public void process(List<ChannelOperation> operations, int chunkSizeMs) throws IOException, UnsupportedAudioFileException {
         int frameRate = (int) inputFormat.getFrameRate();
         int chunkSize = frameRate * chunkSizeMs / 1000;
 
-        fileInfoPrint();
+        fileInfoPrint(operations);
 
         List<FrameStreamProcessor> processors = new ArrayList<>();
         long framesCount = 0;
-        for (int i = 0; i < operations.length; i++) {
-            ChannelOperation operation = operations[i];
+        for (ChannelOperation operation : operations) {
 
             int inputChannel = operation.getInputChannel();
             int outputChannel = operation.getOutputChannel();
@@ -129,9 +148,15 @@ public class FileScanner {
         close(processors);
     }
 
-    private void fileInfoPrint() {
+    private void fileInfoPrint(List<ChannelOperation> operations) {
         System.out.println("Input file: " + inputFile.getAbsolutePath());
         System.out.println("Output file: " + outputFile.getAbsolutePath());
+
+        for (ChannelOperation operation : operations) {
+            String operationText = operation.getInputChannel() + "-> " + operation.getOutputChannel();
+            operationText += " (" + (operation.isAdjust() ? "adjust" : "copy") + ")";
+            System.out.println(operationText);
+        }
     }
 
     public void close() throws IOException {
