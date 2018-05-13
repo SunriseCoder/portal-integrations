@@ -1,19 +1,17 @@
 package app.integrations;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import app.integrations.audio.ChannelOperation;
 import app.integrations.audio.FileScanner;
-import app.integrations.utils.ImageHelper;
 
-public class App {
+public class AudioManipulations {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 3) {
             printUsage();
-            System.exit(0);
+            System.exit(-1);
         }
 
         String inputFileName = args[0];
@@ -73,20 +71,11 @@ public class App {
         scanner.close();
     }
 
-    private static void dumpImage(String folder, String inputName, String imageFile) throws Exception {
-        FileScanner scanner = new FileScanner();
-        scanner.open(folder, inputName);
-        List<List<Integer>> statistics = scanner.calculateStatistics(1000);
-        scanner.close();
-        ImageHelper.createImage(statistics, folder, imageFile);
-    }
-
-    private static void combineImages(String folder, String file1, String file2, String outputFile) throws IOException {
-        ImageHelper.combineImageFiles(folder, file1, file2, outputFile);
-    }
-
     private static void printUsage() {
-        System.out.println("Usage: " + App.class.getSimpleName() + " <input file> <output file> <options>");
-        System.out.println("options: c-1,a-0 means: track 1 just copy, track 0 adjust volume and change their order");
+        System.out.println("Usage: " + AudioManipulations.class.getSimpleName() + " <input file> <output file> <options>");
+        System.out.println("Options:");
+        System.out.println("    c - copy audio channel as-is");
+        System.out.println("    a - adjust (normalize) audio channel");
+        System.out.println("options example: c-1,a-0 means: track 1 just copy, track 0 adjust volume and change their order");
     }
 }

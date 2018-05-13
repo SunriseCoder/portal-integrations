@@ -13,8 +13,12 @@ public class ImageHelper {
     private static final int SPEECH_MAX_DELTA = 400;
     private static final int CHANNEL_IMAGE_HEIGHT = 400;
 
-    public static void createImage(List<List<Integer>> allStatistics, String foldername, String filename) throws IOException {
-        File file = FileHelper.createFile(foldername, filename, true);
+    public static void createImage(List<List<Integer>> statistics, String folderName, String fileName) throws IOException {
+        BufferedImage image = createStatisticImage(statistics);
+        saveImage(folderName, fileName, image);
+    }
+
+    public static BufferedImage createStatisticImage(List<List<Integer>> allStatistics) {
         BufferedImage resultImage = null;
         for (int i = 0; i < allStatistics.size(); i++) {
             List<Integer> statistic = allStatistics.get(i);
@@ -25,22 +29,28 @@ public class ImageHelper {
                 resultImage = combineImages(resultImage, image);
             }
         }
-        saveImage(resultImage, file);
+        return resultImage;
     }
 
-    public static void combineImageFiles(String folder, String filename1, String filename2, String outputFilename) throws IOException {
-        File file1 = FileHelper.checkAndGetFile(folder, filename1);
-        BufferedImage image1 = ImageIO.read(file1);
-        File file2 = FileHelper.checkAndGetFile(folder, filename2);
-        BufferedImage image2 = ImageIO.read(file2);
-
+    public static void combineImageFiles(String folder, String fileName1, String fileName2, String outputFileName) throws IOException {
+        BufferedImage image1 = loadImage(folder, fileName1);
+        BufferedImage image2 = loadImage(folder, fileName2);
         BufferedImage resultImage = combineImages(image1, image2);
 
-        File outputFile = FileHelper.createFile(folder, outputFilename, true);
-        saveImage(resultImage, outputFile);
+        saveImage(folder, outputFileName, resultImage);
     }
 
-    private static BufferedImage combineImages(BufferedImage image1, BufferedImage image2) {
+    public static BufferedImage loadImage(String folder, String fileName) throws IOException {
+        File file = FileHelper.checkAndGetFile(folder, fileName);
+        BufferedImage image = ImageIO.read(file);
+        return image;
+    }
+
+    public static BufferedImage combineImages(BufferedImage image1, BufferedImage image2) {
+        if (image1 == null) {
+            return image2;
+        }
+
         int width = Math.max(image1.getWidth(), image2.getWidth());
         int height = image1.getHeight() + image2.getHeight() + 1;
         BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -71,6 +81,11 @@ public class ImageHelper {
         }
 
         return image;
+    }
+
+    public static void saveImage(String folderName, String fileName, BufferedImage image) throws IOException {
+        File file = FileHelper.createFile(folderName, fileName, true);
+        saveImage(image, file);
     }
 
     private static void saveImage(BufferedImage image, File file) throws IOException {
