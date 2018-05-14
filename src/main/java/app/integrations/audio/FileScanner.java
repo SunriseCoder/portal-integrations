@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -64,7 +65,7 @@ public class FileScanner {
         this.outputStream.writeHeader();
     }
 
-    public List<List<Integer>> calculateStatistics(int chunkSizeMs) throws Exception {
+    public List<List<Integer>> calculateStatistics(int chunkSizeMs, Set<String> options) throws Exception {
         int frameRate = (int) inputFormat.getFrameRate();
         int chunkSize = frameRate * chunkSizeMs / 1000;
         int[] frameBuffer = new int[chunkSize];
@@ -73,8 +74,12 @@ public class FileScanner {
         List<List<Integer>> fileStatistics = new ArrayList<>();
 
         for (int channel = 0; channel < channelCount; channel++) {
-            fileStatistics.add(new ArrayList<>());
-            fileStatistics.add(new ArrayList<>());
+            if (options.contains("m")) {
+                fileStatistics.add(new ArrayList<>());
+            }
+            if (options.contains("d")) {
+                fileStatistics.add(new ArrayList<>());
+            }
         }
 
         FrameInputStream inputStream = WaveInputStream.create(inputFile);
@@ -91,11 +96,16 @@ public class FileScanner {
                     StatsCalculator frameStatistics = new StatsCalculator();
                     frameStatistics.addData(frameBuffer, read);
 
-                    List<Integer> channelMeanings = fileStatistics.get(channel);
-                    channelMeanings.add(frameStatistics.getMathMeaning());
+                    int optionCouner = 0;
+                    if (options.contains("m")) {
+                        List<Integer> channelMeanings = fileStatistics.get(channel + optionCouner++);
+                        channelMeanings.add(frameStatistics.getMathMeaning());
+                    }
 
-                    List<Integer> channelDeltas = fileStatistics.get(channel + 1);
-                    channelDeltas.add(frameStatistics.getAverageDelta());
+                    if (options.contains("d")) {
+                        List<Integer> channelDeltas = fileStatistics.get(channel + optionCouner++);
+                        channelDeltas.add(frameStatistics.getAverageDelta());
+                    }
                 }
 
                 processedFramesTotal += read;
