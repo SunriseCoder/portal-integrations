@@ -20,7 +20,7 @@ public class AudioDump {
         long startTime = System.currentTimeMillis();
 
         List<List<Integer>> statistics = collectStatistics(".", inputFileName);
-        BufferedImage image = ImageHelper.createStatisticImage(statistics);
+        BufferedImage image = ImageHelper.createStatisticImage(statistics, inputFileName);
 
         if (args.length > 2 && "a".equals(args[2])) { // Append
             BufferedImage existingImage = null;
