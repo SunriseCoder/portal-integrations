@@ -8,7 +8,7 @@ import java.nio.file.FileAlreadyExistsException;
 public class FileHelper {
 
     public static File createFile(String absoluteFileName, boolean overwrite) throws IOException {
-        File file = new File(absoluteFileName);
+        File file = new File(new File("."), absoluteFileName);
         file.getParentFile().mkdirs();
         if (!overwrite && file.exists()) {
             throw new FileAlreadyExistsException(absoluteFileName);
